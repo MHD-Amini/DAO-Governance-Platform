@@ -8,18 +8,27 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title Treasury
- * @author DAO Governance Platform
- * @notice DAO Treasury with multi-sig security and timelock protection
- * @dev Manages DAO funds with granular access control and spending limits
+ * @author MHD-Amini (github.com/MHD-Amini)
+ * @notice DAO Treasury with timelock protection, spending limits, and grant management
+ * @dev Extends TimelockController with comprehensive fund management capabilities
+ * 
+ * @custom:security-contact security@example.com
+ * 
  * 
  * KEY FEATURES:
- * - Timelock Protection: All actions have mandatory delay
- * - Multi-sig Support: High-value transactions require multiple approvals
- * - Spending Limits: Daily/weekly limits prevent large unauthorized withdrawals
- * - Token Management: Support for ETH and ERC-20 tokens
- * - Grant System: Fund allocation for contributors and projects
- * - Emergency Functions: Pause mechanism for security incidents
- * - Audit Trail: Comprehensive event logging for transparency
+ * - Timelock Protection: 24-hour mandatory delay on all treasury operations
+ * - Role-Based Access: Proposer, Executor, and Admin roles via AccessControl
+ * - Spending Limits: Daily (100 ETH) and weekly (500 ETH) withdrawal caps
+ * - Multi-Token Support: Native ETH and any ERC-20 token
+ * - Grant System: Claimable grants with configurable vesting delays
+ * - Emergency Pause: Freeze all operations during security incidents
+ * - Comprehensive Audit Trail: All operations emit events for transparency
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - All withdrawals require timelock execution
+ * - Spending limits reset automatically based on time periods
+ * - Reentrancy guards on all fund transfer operations
+ * - SafeERC20 used for all token transfers
  */
 contract Treasury is TimelockController, ReentrancyGuard {
     using SafeERC20 for IERC20;

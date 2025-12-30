@@ -630,4 +630,161 @@ describe("DAO Governance Platform", function () {
       console.log("Transfer gas used:", transferReceipt.gasUsed.toString());
     });
   });
+
+  describe("Edge Cases and Advanced Scenarios", function () {
+    describe("Max Supply Edge Cases", function () {
+      it("Should allow minting up to max supply", async function () {
+        // Mint a large amount close to max supply
+        const largeAmount = ethers.parseEther("9900000"); // 9.9 million
+        await governanceToken.mint(addr1.address, largeAmount);
+        expect(await governanceToken.totalSupply()).to.equal(largeAmount);
+      });
+
+      it("Should allow updating max supply to higher value", async function () {
+        const newMaxSupply = ethers.parseEther("20000000"); // 20 million
+        await governanceToken.updateMaxSupply(newMaxSupply);
+        expect(await governanceToken.maxSupply()).to.equal(newMaxSupply);
+      });
+
+      it("Should reject decreasing max supply", async function () {
+        const lowerSupply = ethers.parseEther("5000000");
+        await expect(
+          governanceToken.updateMaxSupply(lowerSupply)
+        ).to.be.revertedWithCustomError(governanceToken, "InvalidAmount");
+      });
+    });
+
+    describe("Delegation Edge Cases", function () {
+      it("Should allow changing delegate multiple times", async function () {
+        await governanceToken.mint(addr1.address, ethers.parseEther("10000"));
+        
+        // Delegate to addr2
+        await governanceToken.connect(addr1).delegate(addr2.address);
+        expect(await governanceToken.delegates(addr1.address)).to.equal(addr2.address);
+        
+        // Change delegate to addr3
+        await governanceToken.connect(addr1).delegate(addr3.address);
+        expect(await governanceToken.delegates(addr1.address)).to.equal(addr3.address);
+        
+        // Verify voting power moved
+        expect(await governanceToken.getVotes(addr2.address)).to.equal(0);
+        expect(await governanceToken.getVotes(addr3.address)).to.equal(ethers.parseEther("10000"));
+      });
+
+      it("Should allow delegating to zero address (removing delegation)", async function () {
+        await governanceToken.mint(addr1.address, ethers.parseEther("10000"));
+        await governanceToken.connect(addr1).delegate(addr2.address);
+        
+        // Delegate to zero address
+        await governanceToken.connect(addr1).delegate(ethers.ZeroAddress);
+        expect(await governanceToken.getVotes(addr2.address)).to.equal(0);
+      });
+    });
+
+    describe("Conviction System Edge Cases", function () {
+      it("Should update conviction data correctly", async function () {
+        await governanceToken.mint(addr1.address, ethers.parseEther("10000"));
+        
+        // Update conviction
+        await governanceToken.updateConviction(addr1.address);
+        
+        const conviction = await governanceToken.getConvictionData(addr1.address);
+        expect(conviction.lastActionTimestamp).to.be.gt(0);
+      });
+    });
+
+    describe("Treasury Edge Cases", function () {
+      it("Should correctly track multiple deposits", async function () {
+        const deposit1 = ethers.parseEther("10");
+        const deposit2 = ethers.parseEther("20");
+        const deposit3 = ethers.parseEther("30");
+        
+        await treasury.deposit("First deposit", { value: deposit1 });
+        await treasury.deposit("Second deposit", { value: deposit2 });
+        await treasury.deposit("Third deposit", { value: deposit3 });
+        
+        expect(await treasury.getBalance()).to.equal(deposit1 + deposit2 + deposit3);
+        
+        const stats = await treasury.getStats();
+        expect(stats.totalDeposited).to.equal(deposit1 + deposit2 + deposit3);
+      });
+
+      it("Should reject zero deposits", async function () {
+        await expect(
+          treasury.deposit("Empty deposit", { value: 0 })
+        ).to.be.revertedWithCustomError(treasury, "InvalidAmount");
+      });
+    });
+
+    describe("Governor Edge Cases", function () {
+      let proposalId;
+
+      beforeEach(async function () {
+        await governanceToken.mintByTier(owner.address, 4);
+        await governanceToken.connect(owner).delegate(owner.address);
+        await mine(1);
+      });
+
+      it("Should correctly track multiple proposals", async function () {
+        const targets = [await treasury.getAddress()];
+        const values = [0];
+        const calldatas = ["0x"];
+
+        // Create first proposal
+        await governor.proposeWithCategory(
+          targets, values, calldatas, "First Proposal", 0, 0, "Title 1"
+        );
+        
+        // Create second proposal
+        await governor.proposeWithCategory(
+          targets, values, calldatas, "Second Proposal", 1, 1, "Title 2"
+        );
+        
+        expect(await governor.proposalCount()).to.equal(2);
+      });
+
+      it("Should correctly report proposal data", async function () {
+        const targets = [await treasury.getAddress()];
+        const values = [0];
+        const calldatas = ["0x"];
+
+        const tx = await governor.proposeWithCategory(
+          targets, values, calldatas, "Test Description", 1, 1, "Test Title"
+        );
+        
+        const receipt = await tx.wait();
+        const event = receipt.logs.find(log => {
+          try {
+            return governor.interface.parseLog(log)?.name === "ProposalCreated";
+          } catch {
+            return false;
+          }
+        });
+        proposalId = governor.interface.parseLog(event).args.proposalId;
+
+        const data = await governor.getProposalData(proposalId);
+        expect(data.category).to.equal(1); // Financial
+        expect(data.votingMode).to.equal(1); // Quadratic
+        expect(data.title).to.equal("Test Title");
+      });
+    });
+  });
+
+  describe("Stress Tests", function () {
+    it("Should handle multiple tier assignments correctly", async function () {
+      const signers = await ethers.getSigners();
+      
+      // Assign different tiers to multiple addresses
+      for (let i = 5; i < 9; i++) {
+        const tier = (i % 4) + 1; // Cycles through tiers 1-4
+        await governanceToken.mintByTier(signers[i].address, tier);
+      }
+      
+      // Verify all assignments
+      expect(await governanceToken.getMemberTier(signers[5].address)).to.equal(2);
+      expect(await governanceToken.getMemberTier(signers[6].address)).to.equal(3);
+      expect(await governanceToken.getMemberTier(signers[7].address)).to.equal(4);
+      expect(await governanceToken.getMemberTier(signers[8].address)).to.equal(1);
+    });
+  });
 });

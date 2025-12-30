@@ -12,17 +12,29 @@ import "./GovernanceToken.sol";
 
 /**
  * @title DAOGovernor
- * @author DAO Governance Platform
- * @notice Advanced governance contract with quadratic voting and proposal categorization
- * @dev Implements OpenZeppelin Governor with custom extensions
+ * @author MHD-Amini (github.com/MHD-Amini)
+ * @notice Advanced DAO governance contract with quadratic voting, proposal categories, and guardian protection
+ * @dev Implements OpenZeppelin Governor v5.x with custom extensions for enhanced governance mechanics
+ * 
+ * @custom:security-contact security@example.com
+ * 
  * 
  * KEY FEATURES:
- * - Quadratic Voting: Reduces whale dominance (√votes instead of raw votes)
- * - Proposal Categories: Different quorum requirements per category
- * - Delegation Support: Vote with delegated power
- * - Timelock Integration: Security delay before execution
- * - Emergency Actions: Guardian can cancel malicious proposals
- * - Gas Optimized: Efficient vote counting and proposal management
+ * - Quadratic Voting: Reduces whale dominance using √(tokens) formula
+ * - Proposal Categories: Different quorum requirements (4%, 10%, 15%, 25%)
+ * - Delegation Support: Vote with delegated power from ERC20Votes
+ * - Timelock Integration: 24-hour security delay before execution
+ * - Guardian Role: Emergency proposal cancellation for security threats
+ * - Conviction Voting: Time-weighted voting power for long-term holders
+ * - Gas Optimized: Efficient vote counting with Babylonian sqrt
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - Flash loan protection via ERC20Votes checkpoint system
+ * - Reentrancy guards on all state-changing vote functions
+ * - Guardian cannot execute, only cancel proposals
+ * - Quadratic voting reduces plutocratic attack vectors
+ * 
+ * @custom:oz-upgrades-unsafe-allow constructor
  */
 contract DAOGovernor is 
     Governor, 

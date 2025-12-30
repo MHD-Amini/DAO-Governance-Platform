@@ -9,17 +9,26 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title GovernanceToken (DGT - DAO Governance Token)
- * @author DAO Governance Platform
- * @notice ERC-20 token with advanced delegation and voting capabilities
- * @dev Implements ERC20Votes for secure vote tracking and delegation
+ * @author MHD-Amini (github.com/MHD-Amini)
+ * @notice ERC-20 token with advanced delegation, conviction tracking, and tiered membership
+ * @dev Implements ERC20Votes for secure vote tracking and delegation with flash loan protection
+ * 
+ * @custom:security-contact security@example.com
+ * 
  * 
  * KEY FEATURES:
- * - Vote Delegation: Token holders can delegate voting power
+ * - Vote Delegation: Token holders can delegate voting power to any address
  * - Checkpoint System: Historical voting power tracking (prevents flash loan attacks)
- * - Permit: Gasless token approvals via EIP-2612
- * - Conviction Tracking: Bonus voting power for long-term holders
- * - Tiered Membership: Different member tiers with varying benefits
- * - Soulbound Option: Non-transferable tokens to prevent vote buying
+ * - EIP-2612 Permit: Gasless token approvals reducing user transaction costs
+ * - Conviction Tracking: Up to 10% bonus voting power for long-term holders (365 days)
+ * - Tiered Membership: Observer (100), Contributor (1K), Core (10K), Founder (100K)
+ * - Soulbound Mode: Non-transferable tokens to prevent vote buying and sybil attacks
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - Checkpoints prevent flash loan voting attacks
+ * - Reentrancy guards on minting and burning operations
+ * - Max supply cap prevents inflation attacks
+ * - Timelock integration for controlled minting
  */
 contract GovernanceToken is ERC20, ERC20Permit, ERC20Votes, Ownable, ReentrancyGuard {
     

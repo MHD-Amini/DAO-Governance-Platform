@@ -11,14 +11,46 @@
     "deploy": "npm run build && wrangler pages deploy dist",
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "test:verbose": "hardhat test --verbose",
     "test:coverage": "hardhat coverage",
-    "deploy:contracts": "hardhat run scripts/deploy.js --network hardhat",
-    "node": "hardhat node"
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "deploy:contracts": "hardhat run scripts/deploy.cjs --network hardhat",
+    "deploy:localhost": "hardhat run scripts/deploy.cjs --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.cjs --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.cjs --network mainnet",
+    "verify": "hardhat verify --network sepolia",
+    "node": "hardhat node",
+    "clean": "hardhat clean && rm -rf cache artifacts typechain-types",
+    "size": "hardhat compile && hardhat run scripts/contract-size.cjs",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "format": "prettier --write 'contracts/**/*.sol' 'test/**/*.cjs' 'scripts/**/*.cjs'"
   },
-  "keywords": ["dao", "governance", "blockchain", "ethereum", "solidity"],
-  "author": "",
+  "keywords": [
+    "dao",
+    "governance",
+    "blockchain",
+    "ethereum",
+    "solidity",
+    "openzeppelin",
+    "quadratic-voting",
+    "defi",
+    "web3",
+    "smart-contracts"
+  ],
+  "author": "MHD-Amini",
   "license": "MIT",
-  "description": "A full-stack DAO governance platform with quadratic voting, delegation, and timelock treasury",
+  "description": "A production-ready DAO governance platform featuring quadratic voting, vote delegation, tiered membership, conviction tracking, and timelock-protected treasury management. Built with OpenZeppelin Governor framework and comprehensive security patterns.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MHD-Amini/DAO-Governance-Platform"
+  },
+  "homepage": "https://github.com/MHD-Amini/DAO-Governance-Platform#readme",
+  "bugs": {
+    "url": "https://github.com/MHD-Amini/DAO-Governance-Platform/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@hono/node-server": "^1.19.7",
     "@hono/vite-cloudflare-pages": "^0.4.3",
@@ -36,6 +68,7 @@
     "@types/chai": "^4.3.20",
     "@types/mocha": "^10.0.10",
     "chai": "^4.5.0",
+    "dotenv": "^16.6.1",
     "ethers": "^6.16.0",
     "hardhat": "^2.28.1",
     "hardhat-gas-reporter": "^2.3.0",
