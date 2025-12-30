@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+cache/
+artifacts/
+typechain-types/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Hardhat
+hardhat-cache/
+cache/
+artifacts/
+
+# Wrangler
+.wrangler/
+.dev.vars
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PM2
+.pm2/
+pids/
+logs/
+*.log
+
+# Backup files
+*.backup
+*.bak
+
+# Coverage
+coverage/
+coverage.json
+.nyc_output/
+
+# TypeChain
+typechain/
+
+# Misc
+*.tgz
